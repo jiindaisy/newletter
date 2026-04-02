@@ -2,115 +2,389 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>사회적경제 뉴스 브리핑</title>
-
 <style>
-body { font-family: Arial; margin: 20px; background:#f5f5f5; }
+  :root{
+    --bg:#f6f4ee;
+    --paper:#ffffff;
+    --line:#e5dfd3;
+    --text:#2f2f2f;
+    --muted:#7b7467;
+    --green:#1f613c;
+    --green-soft:#eef7f1;
+    --chip:#faf8f3;
+    --shadow:0 8px 24px rgba(0,0,0,0.06);
+  }
 
-h2 { margin-bottom:10px; }
+  * { box-sizing: border-box; }
 
-button {
-  margin:4px;
-  padding:6px 10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  background:white;
-  cursor:pointer;
-}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
 
-button.active { background:#1f613c; color:white; }
-button.dim { opacity:0.4; }
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
 
-.box {
-  background:white;
-  padding:12px;
-  margin:10px 0;
-  border-radius:8px;
-}
+  .hero {
+    background: linear-gradient(135deg, #234f3a 0%, #2f6d4a 100%);
+    color: white;
+    padding: 28px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+  }
 
-.keyword {
-  display:inline-block;
-  margin:4px;
-  padding:6px;
-  border:1px solid #ddd;
-  border-radius:6px;
-  cursor:pointer;
-}
-.keyword.active { background:#dff5e8; }
+  .hero h1 {
+    margin: 0 0 8px;
+    font-size: 34px;
+  }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-  background:white;
-}
+  .hero p {
+    margin: 0;
+    opacity: 0.92;
+    line-height: 1.6;
+  }
 
-td, th {
-  border:1px solid #ddd;
-  padding:8px;
-  font-size:14px;
-}
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 18px;
+    flex-wrap: wrap;
+  }
 
-th { background:#eee; }
+  .btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+  }
 
-.score {
-  font-size:12px;
-  color:green;
-}
+  .btn:hover {
+    background: #f7f7f7;
+  }
 
-.summary {
-  font-size:13px;
-  color:#666;
-  margin-top:4px;
-}
+  .btn-primary {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+    font-weight: bold;
+  }
+
+  .loading {
+    display: none;
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  .small-note {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .grid-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  .section {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .section h2, .section h3 {
+    margin: 0 0 12px;
+  }
+
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filter-btn {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--chip);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all .15s ease;
+  }
+
+  .filter-btn:hover {
+    background: #f0ece3;
+  }
+
+  .filter-btn.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+    font-weight: bold;
+  }
+
+  .filter-btn.dim {
+    opacity: 0.45;
+  }
+
+  .top-news-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+  }
+
+  .top-news-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    background: #fffdf9;
+  }
+
+  .top-news-rank {
+    display: inline-block;
+    min-width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 999px;
+    background: var(--green);
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .top-news-title {
+    font-weight: bold;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .top-news-meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .keyword-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .keyword-item {
+    min-width: 140px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #fafafa;
+    cursor: pointer;
+  }
+
+  .keyword-item.active {
+    background: var(--green-soft);
+    border-color: var(--green);
+  }
+
+  .keyword-item-title {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .keyword-item-value {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .news-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .news-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    background: white;
+  }
+
+  .news-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .news-title {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.55;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .news-title:hover {
+    color: var(--green);
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .summary {
+    color: #5c574e;
+    line-height: 1.6;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  .empty {
+    color: var(--muted);
+    padding: 16px 0;
+  }
+
+  .archive-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 900px) {
+    .grid-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .top-news-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 </head>
-
 <body>
+<div class="page">
 
-<h2>사회적경제 뉴스 브리핑</h2>
+  <div class="hero">
+    <h1>사회적경제 뉴스 브리핑</h1>
+    <p>전날 오전 10시부터 당일 오전 10시까지의 기사 중 관련성 점수가 높은 뉴스만 정리합니다.</p>
+  </div>
 
-<button onclick="loadNews(true)">뉴스 반영</button>
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="loadNews(true)">뉴스 반영</button>
+    <span id="loadingText" class="loading">수집 중...</span>
+    <span class="small-note">버튼을 누르면 새 기사 수집 후 최신 브리핑을 다시 불러옵니다.</span>
+  </div>
 
-<div class="box">
-<b>출처 필터</b>
-<div id="sourceButtons"></div>
-</div>
+  <div class="grid-stats">
+    <div class="card stat-card">
+      <div class="stat-label">현재 브리핑 날짜</div>
+      <div class="stat-value" id="currentBatchText">-</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">현재 날짜 기사 수</div>
+      <div class="stat-value" id="totalCount">0</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">현재 출처 필터</div>
+      <div class="stat-value" id="currentSourceText">전체</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">현재 키워드 필터</div>
+      <div class="stat-value" id="currentKeywordText">전체</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">최소 관련성 점수</div>
+      <div class="stat-value" id="currentScoreText">70</div>
+    </div>
+  </div>
 
-<div class="box">
-<b>키워드 필터</b>
-<div id="keywordButtons"></div>
-</div>
+  <div class="section">
+    <h3>🔥 오늘의 핵심 뉴스 TOP 5</h3>
+    <div id="topNews" class="top-news-grid"></div>
+  </div>
 
-<div class="box">
-<b>점수 필터</b>
-<div id="scoreButtons"></div>
-</div>
+  <div class="section">
+    <h3>출처 필터</h3>
+    <div id="sourceButtons" class="button-row"></div>
+  </div>
 
-<div class="box">
-<b>키워드별 기사 수</b>
-<div id="keywordStats"></div>
-</div>
+  <div class="section">
+    <h3>키워드 필터</h3>
+    <div id="keywordButtons" class="button-row"></div>
+  </div>
 
-<table>
-<thead>
-<tr>
-<th>날짜</th>
-<th>출처</th>
-<th>키워드</th>
-<th>기사</th>
-</tr>
-</thead>
-<tbody id="newsBody"></tbody>
-</table>
+  <div class="section">
+    <h3>점수 필터</h3>
+    <div id="scoreButtons" class="button-row"></div>
+  </div>
 
-<div class="box">
-<b>아카이브</b>
-<div id="archive"></div>
+  <div class="section">
+    <h3>키워드별 기사 수</h3>
+    <div id="keywordStats" class="keyword-grid"></div>
+  </div>
+
+  <div class="section">
+    <h3>뉴스 목록</h3>
+    <div id="newsBody" class="news-list"></div>
+  </div>
+
+  <div class="section">
+    <h3>아카이브</h3>
+    <div id="archive" class="archive-row"></div>
+  </div>
 </div>
 
 <script>
-
-const API_URL = "https://script.google.com/macros/s/AKfycbyg6-EcGJtjP9_y8qQiJQ8XrxuLt5e3i2bygU5rxtQnW0nTkno7fcVbdIycnjqjyZJ91A/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwP2LS7qaRXy3bAM6zgSPxRah9p452JJYR4hSdnn8D9Yyl_Rzs1OSRNDJVxuc2Yl_CVfw/exec";
 
 let allNews = [];
 let archiveData = [];
@@ -119,92 +393,139 @@ let currentSource = "전체";
 let currentKeyword = "전체";
 let currentScore = 70;
 
-// =================
-// 데이터 불러오기
-// =================
-async function loadNews(refresh=false){
+const FIXED_SOURCES = [
+  "전체","매일경제","한국경제","서울경제","이데일리","아시아경제",
+  "한겨레","경향신문","임팩트온","더버터","소셜임팩트뉴스"
+];
 
-  let url = API_URL;
+const FIXED_KEYWORDS = [
+  "전체","사회연대경제","사회적기업","사회적경제","사회적금융",
+  "사회연대금융","임팩트투자","소셜벤처","청년","청년창업",
+  "금융정책","지역문제","공익","비영리","ESG","지속가능","스타트업"
+];
 
-  if(refresh){
-    url += "?action=refresh&t="+Date.now();
-  } else {
-    url += "?t="+Date.now();
+async function loadNews(refresh=false) {
+  const loadingText = document.getElementById("loadingText");
+  loadingText.style.display = "inline";
+
+  try {
+    let url = API_URL;
+    if (refresh) {
+      url += "?action=refresh&t=" + Date.now();
+    } else {
+      url += "?t=" + Date.now();
+    }
+
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+
+    allNews = data.news || [];
+    archiveData = data.archive || [];
+
+    if (data.latestBatchDate) {
+      currentBatch = data.latestBatchDate;
+    }
+
+    renderAll();
+  } catch (e) {
+    alert("데이터 불러오기 실패");
+    console.log(e);
+  } finally {
+    loadingText.style.display = "none";
   }
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  allNews = data.news || [];
-  archiveData = data.archive || [];
-
-  if(data.latestBatchDate){
-    currentBatch = data.latestBatchDate;
-  }
-
-  renderAll();
 }
 
-// =================
-// 필터
-// =================
-function getFiltered(){
+function getBaseBatchNews() {
+  return allNews.filter(n => normalizeDate(n.batchDate) === normalizeDate(currentBatch));
+}
 
-  let data = allNews.filter(n => n.batchDate === currentBatch);
+function getFiltered() {
+  let data = getBaseBatchNews();
 
-  if(currentSource !== "전체"){
+  if (currentSource !== "전체") {
     data = data.filter(n => n.source === currentSource);
   }
 
-  if(currentKeyword !== "전체"){
+  if (currentKeyword !== "전체") {
     data = data.filter(n => n.keyword === currentKeyword);
   }
 
-  data = data.filter(n => (n.relevanceScore || 0) >= currentScore);
+  data = data.filter(n => Number(n.relevanceScore || 0) >= currentScore);
 
-  return data.sort((a,b)=> new Date(b.publishedAt)-new Date(a.publishedAt));
+  return data.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 }
 
-// =================
-// 전체 렌더
-// =================
-function renderAll(){
+function normalizeDate(v) {
+  if (!v) return "";
+  return String(v).slice(0,10);
+}
+
+function renderAll() {
+  renderTopNews();
   renderSourceButtons();
   renderKeywordButtons();
   renderScoreButtons();
   renderKeywordStats();
   renderNews();
   renderArchive();
+  updateStats();
 }
 
-// =================
-// 출처 필터 (고정)
-// =================
-function renderSourceButtons(){
+function updateStats() {
+  document.getElementById("currentBatchText").innerText = currentBatch || "-";
+  document.getElementById("currentSourceText").innerText = currentSource;
+  document.getElementById("currentKeywordText").innerText = currentKeyword;
+  document.getElementById("currentScoreText").innerText = currentScore;
+  document.getElementById("totalCount").innerText = getFiltered().length;
+}
 
-  const fixed = [
-    "전체","매일경제","한국경제","서울경제","이데일리","아시아경제",
-    "한겨레","경향신문","임팩트온","더버터","소셜임팩트뉴스"
-  ];
+function renderTopNews() {
+  const div = document.getElementById("topNews");
+  div.innerHTML = "";
 
+  let data = getBaseBatchNews()
+    .filter(n => Number(n.relevanceScore || 0) >= currentScore)
+    .sort((a,b) => {
+      if (Number(b.relevanceScore || 0) !== Number(a.relevanceScore || 0)) {
+        return Number(b.relevanceScore || 0) - Number(a.relevanceScore || 0);
+      }
+      return new Date(b.publishedAt) - new Date(a.publishedAt);
+    })
+    .slice(0,5);
+
+  if (data.length === 0) {
+    div.innerHTML = `<div class="empty">핵심 뉴스가 없습니다.</div>`;
+    return;
+  }
+
+  data.forEach((n, idx) => {
+    const card = document.createElement("div");
+    card.className = "top-news-card";
+    card.innerHTML = `
+      <div class="top-news-rank">${idx + 1}</div>
+      <div class="top-news-title"><a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a></div>
+      <div class="top-news-meta">${n.source} · ${n.keyword} · 관련성 ${n.relevanceScore}</div>
+    `;
+    div.appendChild(card);
+  });
+}
+
+function renderSourceButtons() {
   const div = document.getElementById("sourceButtons");
   div.innerHTML = "";
 
-  fixed.forEach(s=>{
-
+  FIXED_SOURCES.forEach(source => {
     const btn = document.createElement("button");
-    btn.innerText = s;
+    btn.className = "filter-btn";
+    btn.innerText = source;
 
-    if(s === currentSource) btn.classList.add("active");
+    if (source === currentSource) btn.classList.add("active");
 
-    const hasData = allNews.some(n => n.batchDate === currentBatch && n.source === s);
+    const hasData = getBaseBatchNews().some(n => n.source === source);
+    if (source !== "전체" && !hasData) btn.classList.add("dim");
 
-    if(s !== "전체" && !hasData){
-      btn.classList.add("dim");
-    }
-
-    btn.onclick = ()=>{
-      currentSource = s;
+    btn.onclick = () => {
+      currentSource = source;
       renderAll();
     };
 
@@ -212,35 +533,22 @@ function renderSourceButtons(){
   });
 }
 
-// =================
-// 키워드 필터 (고정)
-// =================
-function renderKeywordButtons(){
-
-  const fixed = [
-    "전체","사회연대경제","사회적기업","사회적경제","사회적금융",
-    "사회연대금융","임팩트투자","소셜벤처","청년","청년창업",
-    "금융정책","지역문제","공익","비영리","ESG","지속가능","스타트업"
-  ];
-
+function renderKeywordButtons() {
   const div = document.getElementById("keywordButtons");
   div.innerHTML = "";
 
-  fixed.forEach(k=>{
-
+  FIXED_KEYWORDS.forEach(keyword => {
     const btn = document.createElement("button");
-    btn.innerText = k;
+    btn.className = "filter-btn";
+    btn.innerText = keyword;
 
-    if(k === currentKeyword) btn.classList.add("active");
+    if (keyword === currentKeyword) btn.classList.add("active");
 
-    const hasData = allNews.some(n => n.batchDate === currentBatch && n.keyword === k);
+    const hasData = getBaseBatchNews().some(n => n.keyword === keyword);
+    if (keyword !== "전체" && !hasData) btn.classList.add("dim");
 
-    if(k !== "전체" && !hasData){
-      btn.classList.add("dim");
-    }
-
-    btn.onclick = ()=>{
-      currentKeyword = k;
+    btn.onclick = () => {
+      currentKeyword = keyword;
       renderAll();
     };
 
@@ -248,24 +556,19 @@ function renderKeywordButtons(){
   });
 }
 
-// =================
-// 점수 필터
-// =================
-function renderScoreButtons(){
-
-  const scores = [0,60,70,80,90];
-
+function renderScoreButtons() {
   const div = document.getElementById("scoreButtons");
   div.innerHTML = "";
 
-  scores.forEach(s=>{
+  [0, 60, 70, 80, 90].forEach(score => {
     const btn = document.createElement("button");
-    btn.innerText = s+"점 이상";
+    btn.className = "filter-btn";
+    btn.innerText = `${score}점 이상`;
 
-    if(s === currentScore) btn.classList.add("active");
+    if (score === currentScore) btn.classList.add("active");
 
-    btn.onclick = ()=>{
-      currentScore = s;
+    btn.onclick = () => {
+      currentScore = score;
       renderAll();
     };
 
@@ -273,36 +576,41 @@ function renderScoreButtons(){
   });
 }
 
-// =================
-// 키워드 통계
-// =================
-function renderKeywordStats(){
-
+function renderKeywordStats() {
   const div = document.getElementById("keywordStats");
   div.innerHTML = "";
 
-  let base = allNews.filter(n => n.batchDate === currentBatch);
+  let base = getBaseBatchNews();
 
-  if(currentSource !== "전체"){
+  if (currentSource !== "전체") {
     base = base.filter(n => n.source === currentSource);
   }
 
-  base = base.filter(n => (n.relevanceScore||0)>=currentScore);
+  base = base.filter(n => Number(n.relevanceScore || 0) >= currentScore);
 
   const count = {};
-
-  base.forEach(n=>{
-    count[n.keyword] = (count[n.keyword]||0)+1;
+  base.forEach(n => {
+    count[n.keyword] = (count[n.keyword] || 0) + 1;
   });
 
-  Object.keys(count).forEach(k=>{
+  const keys = Object.keys(count).sort();
+
+  if (keys.length === 0) {
+    div.innerHTML = `<div class="empty">키워드 통계가 없습니다.</div>`;
+    return;
+  }
+
+  keys.forEach(k => {
     const el = document.createElement("div");
-    el.className = "keyword";
-    if(k === currentKeyword) el.classList.add("active");
+    el.className = "keyword-item";
+    if (k === currentKeyword) el.classList.add("active");
 
-    el.innerText = k+" ("+count[k]+")";
+    el.innerHTML = `
+      <div class="keyword-item-title">${k}</div>
+      <div class="keyword-item-value">${count[k]}건</div>
+    `;
 
-    el.onclick = ()=>{
+    el.onclick = () => {
       currentKeyword = k;
       renderAll();
     };
@@ -311,61 +619,58 @@ function renderKeywordStats(){
   });
 }
 
-// =================
-// 뉴스 표시
-// =================
-function renderNews(){
-
+function renderNews() {
   const body = document.getElementById("newsBody");
   body.innerHTML = "";
 
-  const list = getFiltered().slice(0,30);
+  const list = getFiltered().slice(0, 30);
 
-  if(list.length === 0){
-    body.innerHTML = "<tr><td colspan='4'>데이터 없음</td></tr>";
+  if (list.length === 0) {
+    body.innerHTML = `<div class="empty">데이터가 없습니다.</div>`;
     return;
   }
 
-  list.forEach(n=>{
-    const tr = document.createElement("tr");
+  list.forEach(n => {
+    const card = document.createElement("div");
+    card.className = "news-card";
 
-    tr.innerHTML = `
-    <td>${n.batchDate}</td>
-    <td>${n.source}</td>
-    <td>${n.keyword}</td>
-    <td>
-      <a href="${n.link}" target="_blank">${n.title}</a>
-      <div class="score">관련성 ${n.relevanceScore} / 출처 ${n.sourceScore}</div>
-      <div class="summary">${n.summary || ""}</div>
-    </td>
+    card.innerHTML = `
+      <div class="news-header">
+        <div style="flex:1;">
+          <a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a>
+          <div class="badge-row">
+            <span class="badge">${n.source}</span>
+            <span class="badge">${n.keyword}</span>
+            <span class="badge">관련성 ${n.relevanceScore}</span>
+            <span class="badge">출처정확도 ${n.sourceScore}</span>
+            <span class="badge">${escapeHtml(String(n.publishedAt || ""))}</span>
+          </div>
+          <div class="summary">${escapeHtml(n.summary || "")}</div>
+        </div>
+      </div>
     `;
 
-    body.appendChild(tr);
+    body.appendChild(card);
   });
 }
 
-// =================
-// 아카이브
-// =================
-function renderArchive(){
-
+function renderArchive() {
   const div = document.getElementById("archive");
   div.innerHTML = "";
 
-  const sorted = [...archiveData].sort((a,b)=> new Date(b.batchDate)-new Date(a.batchDate));
+  const sorted = [...archiveData].sort((a,b) => new Date(b.batchDate) - new Date(a.batchDate));
 
-  sorted.slice(0,7).forEach(a=>{
-
+  sorted.slice(0,7).forEach(a => {
     const btn = document.createElement("button");
+    btn.className = "filter-btn";
+    btn.innerText = `${normalizeDate(a.batchDate)} (${a.articleCount})`;
 
-    btn.innerText = a.batchDate+" ("+a.articleCount+")";
-
-    if(a.batchDate === currentBatch){
+    if (normalizeDate(a.batchDate) === normalizeDate(currentBatch)) {
       btn.classList.add("active");
     }
 
-    btn.onclick = ()=>{
-      currentBatch = a.batchDate;
+    btn.onclick = () => {
+      currentBatch = normalizeDate(a.batchDate);
       currentSource = "전체";
       currentKeyword = "전체";
       currentScore = 70;
@@ -376,10 +681,16 @@ function renderArchive(){
   });
 }
 
-// =================
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 loadNews();
-
 </script>
-
 </body>
 </html>
