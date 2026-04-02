@@ -2,26 +2,72 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>사회적경제 뉴스</title>
+<title>사회적경제 뉴스 브리핑</title>
 
 <style>
 body { font-family: Arial; margin: 20px; background:#f5f5f5; }
-button { margin:4px; padding:6px 10px; border-radius:6px; border:1px solid #ccc; background:white; cursor:pointer;}
+
+h2 { margin-bottom:10px; }
+
+button {
+  margin:4px;
+  padding:6px 10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  background:white;
+  cursor:pointer;
+}
+
 button.active { background:#1f613c; color:white; }
 button.dim { opacity:0.4; }
-.box { background:white; padding:12px; margin:10px 0; border-radius:8px; }
-.keyword { display:inline-block; margin:4px; padding:6px; border:1px solid #ddd; border-radius:6px; cursor:pointer;}
+
+.box {
+  background:white;
+  padding:12px;
+  margin:10px 0;
+  border-radius:8px;
+}
+
+.keyword {
+  display:inline-block;
+  margin:4px;
+  padding:6px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  cursor:pointer;
+}
 .keyword.active { background:#dff5e8; }
-table { width:100%; border-collapse:collapse; background:white; }
-td, th { border:1px solid #ddd; padding:8px; }
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+td, th {
+  border:1px solid #ddd;
+  padding:8px;
+  font-size:14px;
+}
+
 th { background:#eee; }
-.score { font-size:12px; color:green; }
+
+.score {
+  font-size:12px;
+  color:green;
+}
+
+.summary {
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>사회적경제 뉴스</h2>
+<h2>사회적경제 뉴스 브리핑</h2>
 
 <button onclick="loadNews(true)">뉴스 반영</button>
 
@@ -41,7 +87,7 @@ th { background:#eee; }
 </div>
 
 <div class="box">
-<b>키워드별 기사수</b>
+<b>키워드별 기사 수</b>
 <div id="keywordStats"></div>
 </div>
 
@@ -64,14 +110,14 @@ th { background:#eee; }
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbx4VrFdxBwiTfRYhHPO0iQw2J_8CGBfUgUNjfW7Js9dgmiXhpVGbiT2DapAfMeJm0Db/exec";
+const API_URL = "여기에_너_웹앱_URL";
 
 let allNews = [];
 let archiveData = [];
 let currentBatch = "";
 let currentSource = "전체";
 let currentKeyword = "전체";
-let currentScore = 80;
+let currentScore = 70;
 
 // =================
 // 데이터 불러오기
@@ -100,7 +146,7 @@ async function loadNews(refresh=false){
 }
 
 // =================
-// 필터링
+// 필터
 // =================
 function getFiltered(){
 
@@ -120,7 +166,7 @@ function getFiltered(){
 }
 
 // =================
-// 렌더
+// 전체 렌더
 // =================
 function renderAll(){
   renderSourceButtons();
@@ -136,7 +182,10 @@ function renderAll(){
 // =================
 function renderSourceButtons(){
 
-  const fixed = ["전체","매일경제","한국경제","임팩트온","더버터","소셜임팩트뉴스"];
+  const fixed = [
+    "전체","매일경제","한국경제","서울경제","이데일리","아시아경제",
+    "한겨레","경향신문","임팩트온","더버터","소셜임팩트뉴스"
+  ];
 
   const div = document.getElementById("sourceButtons");
   div.innerHTML = "";
@@ -168,7 +217,11 @@ function renderSourceButtons(){
 // =================
 function renderKeywordButtons(){
 
-  const fixed = ["전체","사회연대경제","사회적기업","사회적경제","사회적금융","임팩트투자","청년정책","금융정책"];
+  const fixed = [
+    "전체","사회연대경제","사회적기업","사회적경제","사회적금융",
+    "사회연대금융","임팩트투자","소셜벤처","청년","청년창업",
+    "금융정책","지역문제","공익","비영리","ESG","지속가능","스타트업"
+  ];
 
   const div = document.getElementById("keywordButtons");
   div.innerHTML = "";
@@ -207,7 +260,7 @@ function renderScoreButtons(){
 
   scores.forEach(s=>{
     const btn = document.createElement("button");
-    btn.innerText = s+"점";
+    btn.innerText = s+"점 이상";
 
     if(s === currentScore) btn.classList.add("active");
 
@@ -259,14 +312,14 @@ function renderKeywordStats(){
 }
 
 // =================
-// 뉴스 테이블
+// 뉴스 표시
 // =================
 function renderNews(){
 
   const body = document.getElementById("newsBody");
   body.innerHTML = "";
 
-  const list = getFiltered().slice(0,20);
+  const list = getFiltered().slice(0,30);
 
   if(list.length === 0){
     body.innerHTML = "<tr><td colspan='4'>데이터 없음</td></tr>";
@@ -281,8 +334,9 @@ function renderNews(){
     <td>${n.source}</td>
     <td>${n.keyword}</td>
     <td>
-      <a href="${n.link}" target="_blank">${n.title}</a><br>
-      <span class="score">관련성:${n.relevanceScore} / 출처:${n.sourceScore}</span>
+      <a href="${n.link}" target="_blank">${n.title}</a>
+      <div class="score">관련성 ${n.relevanceScore} / 출처 ${n.sourceScore}</div>
+      <div class="summary">${n.summary || ""}</div>
     </td>
     `;
 
@@ -314,7 +368,7 @@ function renderArchive(){
       currentBatch = a.batchDate;
       currentSource = "전체";
       currentKeyword = "전체";
-      currentScore = 80;
+      currentScore = 70;
       renderAll();
     };
 
@@ -322,6 +376,7 @@ function renderArchive(){
   });
 }
 
+// =================
 loadNews();
 
 </script>
