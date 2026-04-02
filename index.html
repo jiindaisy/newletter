@@ -129,7 +129,7 @@
     margin-bottom: 16px;
   }
 
-  .section h2, .section h3 {
+  .section h3 {
     margin: 0 0 12px;
   }
 
@@ -201,37 +201,6 @@
     font-size: 12px;
   }
 
-  .keyword-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .keyword-item {
-    min-width: 140px;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: #fafafa;
-    cursor: pointer;
-  }
-
-  .keyword-item.active {
-    background: var(--green-soft);
-    border-color: var(--green);
-  }
-
-  .keyword-item-title {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  .keyword-item-value {
-    font-size: 18px;
-    font-weight: bold;
-  }
-
   .news-list {
     display: grid;
     gap: 12px;
@@ -242,14 +211,6 @@
     border-radius: 14px;
     padding: 16px;
     background: white;
-  }
-
-  .news-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    align-items: flex-start;
-    margin-bottom: 8px;
   }
 
   .news-title {
@@ -368,11 +329,6 @@
   </div>
 
   <div class="section">
-    <h3>키워드별 기사 수</h3>
-    <div id="keywordStats" class="keyword-grid"></div>
-  </div>
-
-  <div class="section">
     <h3>뉴스 목록</h3>
     <div id="newsBody" class="news-list"></div>
   </div>
@@ -384,7 +340,7 @@
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbx8ShpABDCfauLGp1Sj8eP66jUYBA6zarY2zt4dBVGQ3ItKq3XdMDb72ka3Zi3OX3ljkg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyVXt6i8pe8kKCwIQ-2Pr_NpbTHWJtwED-kD7UoM3QEC1d7dT6BsKTHq0XLJnFiB3FzVg/exec";
 
 let allNews = [];
 let archiveData = [];
@@ -417,13 +373,17 @@ async function loadNews(refresh=false) {
     }
 
     const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("응답 오류");
+
     const data = await res.json();
 
-    allNews = data.news || [];
+    allNews = dedupeNews(data.news || []);
     archiveData = data.archive || [];
 
     if (data.latestBatchDate) {
-      currentBatch = data.latestBatchDate;
+      currentBatch = normalizeDate(data.latestBatchDate);
+    } else {
+      currentBatch = getLatestBatchFromNews();
     }
 
     renderAll();
@@ -433,6 +393,34 @@ async function loadNews(refresh=false) {
   } finally {
     loadingText.style.display = "none";
   }
+}
+
+function dedupeNews(arr) {
+  const seen = new Set();
+  return arr.filter(item => {
+    const key = `${normalizeText(item.title)}|${normalizeText(item.source)}|${normalizeText(item.link)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeText(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function normalizeDate(v) {
+  if (!v) return "";
+  return String(v).slice(0,10);
+}
+
+function getLatestBatchFromNews() {
+  if (!allNews.length) return "";
+  return allNews
+    .map(n => normalizeDate(n.batchDate))
+    .filter(Boolean)
+    .sort()
+    .slice(-1)[0] || "";
 }
 
 function getBaseBatchNews() {
@@ -455,17 +443,11 @@ function getFiltered() {
   return data.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 }
 
-function normalizeDate(v) {
-  if (!v) return "";
-  return String(v).slice(0,10);
-}
-
 function renderAll() {
   renderTopNews();
   renderSourceButtons();
   renderKeywordButtons();
   renderScoreButtons();
-  renderKeywordStats();
   renderNews();
   renderArchive();
   updateStats();
@@ -477,6 +459,22 @@ function updateStats() {
   document.getElementById("currentKeywordText").innerText = currentKeyword;
   document.getElementById("currentScoreText").innerText = currentScore;
   document.getElementById("totalCount").innerText = getFiltered().length;
+}
+
+function getKeywordCounts() {
+  let base = getBaseBatchNews();
+
+  if (currentSource !== "전체") {
+    base = base.filter(n => n.source === currentSource);
+  }
+
+  base = base.filter(n => Number(n.relevanceScore || 0) >= currentScore);
+
+  const counts = {};
+  base.forEach(n => {
+    counts[n.keyword] = (counts[n.keyword] || 0) + 1;
+  });
+  return counts;
 }
 
 function renderTopNews() {
@@ -537,15 +535,21 @@ function renderKeywordButtons() {
   const div = document.getElementById("keywordButtons");
   div.innerHTML = "";
 
+  const counts = getKeywordCounts();
+
   FIXED_KEYWORDS.forEach(keyword => {
     const btn = document.createElement("button");
     btn.className = "filter-btn";
-    btn.innerText = keyword;
+
+    const count = keyword === "전체"
+      ? getBaseBatchNews().filter(n => currentSource === "전체" ? true : n.source === currentSource)
+          .filter(n => Number(n.relevanceScore || 0) >= currentScore).length
+      : (counts[keyword] || 0);
+
+    btn.innerText = `${keyword}(${count})`;
 
     if (keyword === currentKeyword) btn.classList.add("active");
-
-    const hasData = getBaseBatchNews().some(n => n.keyword === keyword);
-    if (keyword !== "전체" && !hasData) btn.classList.add("dim");
+    if (keyword !== "전체" && count === 0) btn.classList.add("dim");
 
     btn.onclick = () => {
       currentKeyword = keyword;
@@ -576,49 +580,6 @@ function renderScoreButtons() {
   });
 }
 
-function renderKeywordStats() {
-  const div = document.getElementById("keywordStats");
-  div.innerHTML = "";
-
-  let base = getBaseBatchNews();
-
-  if (currentSource !== "전체") {
-    base = base.filter(n => n.source === currentSource);
-  }
-
-  base = base.filter(n => Number(n.relevanceScore || 0) >= currentScore);
-
-  const count = {};
-  base.forEach(n => {
-    count[n.keyword] = (count[n.keyword] || 0) + 1;
-  });
-
-  const keys = Object.keys(count).sort();
-
-  if (keys.length === 0) {
-    div.innerHTML = `<div class="empty">키워드 통계가 없습니다.</div>`;
-    return;
-  }
-
-  keys.forEach(k => {
-    const el = document.createElement("div");
-    el.className = "keyword-item";
-    if (k === currentKeyword) el.classList.add("active");
-
-    el.innerHTML = `
-      <div class="keyword-item-title">${k}</div>
-      <div class="keyword-item-value">${count[k]}건</div>
-    `;
-
-    el.onclick = () => {
-      currentKeyword = k;
-      renderAll();
-    };
-
-    div.appendChild(el);
-  });
-}
-
 function renderNews() {
   const body = document.getElementById("newsBody");
   body.innerHTML = "";
@@ -635,19 +596,15 @@ function renderNews() {
     card.className = "news-card";
 
     card.innerHTML = `
-      <div class="news-header">
-        <div style="flex:1;">
-          <a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a>
-          <div class="badge-row">
-            <span class="badge">${n.source}</span>
-            <span class="badge">${n.keyword}</span>
-            <span class="badge">관련성 ${n.relevanceScore}</span>
-            <span class="badge">출처정확도 ${n.sourceScore}</span>
-            <span class="badge">${escapeHtml(String(n.publishedAt || ""))}</span>
-          </div>
-          <div class="summary">${escapeHtml(n.summary || "")}</div>
-        </div>
+      <a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a>
+      <div class="badge-row">
+        <span class="badge">${n.source}</span>
+        <span class="badge">${n.keyword}</span>
+        <span class="badge">관련성 ${n.relevanceScore}</span>
+        <span class="badge">출처정확도 ${n.sourceScore}</span>
+        <span class="badge">${escapeHtml(String(n.publishedAt || ""))}</span>
       </div>
+      <div class="summary">${escapeHtml(n.summary || "")}</div>
     `;
 
     body.appendChild(card);
@@ -658,9 +615,9 @@ function renderArchive() {
   const div = document.getElementById("archive");
   div.innerHTML = "";
 
-  const sorted = [...archiveData].sort((a,b) => new Date(b.batchDate) - new Date(a.batchDate));
+  const sorted = [...archiveData].sort((a,b) => new Date(a.batchDate) - new Date(b.batchDate));
 
-  sorted.slice(0,7).forEach(a => {
+  sorted.slice(-7).reverse().forEach(a => {
     const btn = document.createElement("button");
     btn.className = "filter-btn";
     btn.innerText = `${normalizeDate(a.batchDate)} (${a.articleCount})`;
