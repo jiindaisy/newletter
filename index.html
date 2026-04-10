@@ -389,7 +389,7 @@ async function loadNews(refresh=false) {
     const data = await res.json();
 
     allNews = dedupeNews(data.news || []);
-    archiveData = Array.isArray(data.archive) ? data.archive.slice(1).filter(r => Array.isArray(r)) : [];
+    archiveData = Array.isArray(data.archive) ? data.archive : [];
 
     if (data.latestBatchDate) {
       currentBatch = normalizeDate(data.latestBatchDate);
@@ -627,13 +627,13 @@ function renderArchive() {
   div.innerHTML = "";
 
   const rows = archiveData
-    .map(r => ({
-      batchDate: normalizeDate(r[0]),
-      articleCount: r[1]
+    .map(a => ({
+      batchDate: normalizeDate(a.batchDate),
+      articleCount: a.articleCount
     }))
-    .filter(r => r.batchDate);
+    .filter(a => a.batchDate);
 
-  rows.sort((a,b) => new Date(a.batchDate) - new Date(b.batchDate));
+  rows.sort((a, b) => new Date(a.batchDate) - new Date(b.batchDate));
 
   rows.slice(-7).reverse().forEach(a => {
     const btn = document.createElement("button");
