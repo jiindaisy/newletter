@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>뉴스 브리핑</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사회적경제 뉴스 브리핑 vFINAL-13</title>
 <style>
 :root{
   --bg:#fff4f8;
@@ -10,65 +11,255 @@
   --line:#f2c7d8;
   --text:#3a2a31;
   --muted:#8a6b78;
-  --main:#d63384;
+  --main:#b0185b;
+  --main2:#d63384;
   --soft:#fde8f1;
+  --chip:#fff7fa;
+  --shadow:0 8px 24px rgba(176,24,91,0.10);
 }
-
-body{
-  background:var(--bg);
-  font-family:Arial;
-  margin:0;
-  padding:20px;
-}
-
-.card{
-  background:white;
-  padding:15px;
-  margin-bottom:10px;
-  border-radius:12px;
-  border:1px solid var(--line);
-}
-
-.btn{
-  padding:10px;
-  background:var(--main);
-  color:white;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.page{max-width:1200px;margin:0 auto;padding:24px}
+.hero{background:linear-gradient(135deg,#b0185b 0%,#ef8ab7 100%);color:white;padding:28px;border-radius:20px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{margin:0 0 8px;font-size:34px}
+.hero p{margin:0;opacity:.92;line-height:1.6}
+.version-badge{display:inline-block;margin-left:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.22);font-size:12px;font-weight:bold}
+.toolbar{display:flex;align-items:center;gap:10px;margin:16px 0 18px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:white;cursor:pointer;font-size:14px}
+.btn-primary{background:var(--main);border-color:var(--main);color:white;font-weight:bold}
+.loading{display:none;color:var(--main);font-weight:bold}
+.small-note{color:var(--muted);font-size:13px}
+.grid-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.card,.section{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.stat-card{padding:16px}
+.stat-label{font-size:13px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:bold}
+.section{padding:16px;margin-bottom:16px}
+.section h3{margin:0 0 12px}
+.button-row{display:flex;flex-wrap:wrap;gap:8px}
+.filter-btn{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);cursor:pointer;font-size:13px}
+.filter-btn.active{background:var(--main);color:white;border-color:var(--main);font-weight:bold}
+.filter-btn.dim{opacity:.45}
+.top-news-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.top-news-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fffafd}
+.top-news-rank{display:inline-block;min-width:28px;height:28px;line-height:28px;text-align:center;border-radius:999px;background:var(--main);color:white;font-weight:bold;margin-bottom:10px}
+.top-news-meta{color:var(--muted);font-size:12px}
+.news-list{display:grid;gap:12px}
+.news-card{border:1px solid var(--line);border-radius:14px;padding:16px;background:white}
+.news-title{font-size:18px;font-weight:bold;line-height:1.55;text-decoration:none;color:var(--text)}
+.news-title:hover{color:var(--main)}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:var(--soft);color:var(--main);font-size:12px;font-weight:bold}
+.summary{color:#5c574e;line-height:1.6;margin-top:10px;font-size:14px}
+.empty{color:var(--muted);padding:16px 0}
+.archive-row{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:900px){.grid-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.top-news-grid{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
+<div class="page">
+  <div class="hero">
+    <h1>사회적경제 뉴스 브리핑 <span class="version-badge">vFINAL-13</span></h1>
+    <p>전날 오전 10시부터 당일 오전 10시까지의 기사 중 관련성 점수가 높은 뉴스만 정리합니다.</p>
+  </div>
 
-<h2>💗 사회적경제 뉴스</h2>
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="loadNews(true)">뉴스 반영</button>
+    <span id="loadingText" class="loading">수집 중...</span>
+    <span class="small-note">새 기사 수집 후 최신 브리핑을 다시 불러옵니다.</span>
+  </div>
 
-<button class="btn" onclick="loadNews()">뉴스 불러오기</button>
+  <div class="grid-stats">
+    <div class="card stat-card"><div class="stat-label">현재 브리핑 날짜</div><div class="stat-value" id="currentBatchText">-</div></div>
+    <div class="card stat-card"><div class="stat-label">현재 날짜 기사 수</div><div class="stat-value" id="totalCount">0</div></div>
+    <div class="card stat-card"><div class="stat-label">현재 출처 필터</div><div class="stat-value" id="currentSourceText">전체</div></div>
+    <div class="card stat-card"><div class="stat-label">현재 키워드 필터</div><div class="stat-value" id="currentKeywordText">전체</div></div>
+    <div class="card stat-card"><div class="stat-label">최소 관련성 점수</div><div class="stat-value" id="currentScoreText">70</div></div>
+  </div>
 
-<div id="news"></div>
+  <div class="section"><h3>🔥 오늘의 핵심 뉴스 TOP 5</h3><div id="topNews" class="top-news-grid"></div></div>
+  <div class="section"><h3>출처 필터</h3><div id="sourceButtons" class="button-row"></div></div>
+  <div class="section"><h3>키워드 필터</h3><div id="keywordButtons" class="button-row"></div></div>
+  <div class="section"><h3>점수 필터</h3><div id="scoreButtons" class="button-row"></div></div>
+  <div class="section"><h3>뉴스 목록</h3><div id="newsBody" class="news-list"></div></div>
+  <div class="section"><h3>아카이브</h3><div id="archive" class="archive-row"></div></div>
+</div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyxzBpKyZK-u1dEtAQr-0DeDdBbSGZw1_I-jtQ7XDNf3C9F6w7yNKr8Ootq7C3RMmCvgw/exec";
 
-async function loadNews(){
-  const res = await fetch(API_URL);
-  const data = await res.json();
+let allNews=[], archiveData=[], currentBatch="", currentSource="전체", currentKeyword="전체", currentScore=70;
 
-  const div = document.getElementById("news");
-  div.innerHTML="";
+const FIXED_SOURCES=[
+  "전체","매일경제","한국경제","서울경제","이데일리","아시아경제",
+  "한겨레","경향신문","임팩트온","더버터","소셜임팩트뉴스",
+  "더나은미래","오마이뉴스","이로운넷"
+];
 
-  data.news.slice(-20).reverse().forEach(n=>{
-    div.innerHTML += `
-      <div class="card">
-        <b>${n.title}</b><br>
-        <small>${n.source} | ${n.batchDate}</small><br>
-        <a href="${n.link}" target="_blank">기사보기</a>
-      </div>
-    `;
+const FIXED_KEYWORDS=[
+  "전체","사회연대경제","사회적기업","사회적경제","사회적금융",
+  "사회연대금융","임팩트투자","소셜벤처","청년","청년창업",
+  "금융정책","지역문제","공익","비영리","ESG","지속가능","스타트업"
+];
+
+async function loadNews(refresh=false){
+  document.getElementById("loadingText").style.display="inline";
+  try{
+    let url=API_URL+(refresh?"?action=refresh&t=":"?t=")+Date.now();
+    const res=await fetch(url,{cache:"no-store"});
+    const data=await res.json();
+    allNews=dedupeNews(data.news||[]);
+    archiveData=Array.isArray(data.archive)?data.archive:[];
+    currentBatch=data.latestBatchDate?normalizeDate(data.latestBatchDate):getLatestBatchFromNews();
+    renderAll();
+  }catch(e){
+    alert("데이터 불러오기 실패");
+    console.log(e);
+  }finally{
+    document.getElementById("loadingText").style.display="none";
+  }
+}
+
+function normalizeText(v){return String(v||"").trim().toLowerCase()}
+function normalizeDate(v){return v?String(v).slice(0,10):""}
+function dedupeNews(arr){
+  const seen=new Set();
+  return arr.filter(n=>{
+    const key=`${normalizeText(n.title)}|${normalizeText(n.source)}|${normalizeText(n.link)}`;
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 }
+function getLatestBatchFromNews(){
+  return allNews.map(n=>normalizeDate(n.batchDate)).filter(Boolean).sort().slice(-1)[0]||"";
+}
+function getBaseBatchNews(){
+  return allNews.filter(n=>normalizeDate(n.batchDate)===normalizeDate(currentBatch));
+}
+function getFiltered(){
+  let data=getBaseBatchNews();
+  if(currentSource!=="전체") data=data.filter(n=>n.source===currentSource);
+  if(currentKeyword!=="전체") data=data.filter(n=>n.keyword===currentKeyword);
+  data=data.filter(n=>Number(n.relevanceScore||0)>=currentScore);
+  return data.sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+}
+function renderAll(){
+  renderTopNews(); renderSourceButtons(); renderKeywordButtons(); renderScoreButtons(); renderNews(); renderArchive(); updateStats();
+}
+function updateStats(){
+  document.getElementById("currentBatchText").innerText=currentBatch||"-";
+  document.getElementById("currentSourceText").innerText=currentSource;
+  document.getElementById("currentKeywordText").innerText=currentKeyword;
+  document.getElementById("currentScoreText").innerText=currentScore;
+  document.getElementById("totalCount").innerText=getFiltered().length;
+}
+function getKeywordCounts(){
+  let base=getBaseBatchNews();
+  if(currentSource!=="전체") base=base.filter(n=>n.source===currentSource);
+  base=base.filter(n=>Number(n.relevanceScore||0)>=currentScore);
+  const counts={};
+  base.forEach(n=>{counts[n.keyword]=(counts[n.keyword]||0)+1});
+  return counts;
+}
+function renderTopNews(){
+  const div=document.getElementById("topNews");
+  div.innerHTML="";
+  const data=getBaseBatchNews()
+    .filter(n=>Number(n.relevanceScore||0)>=currentScore)
+    .sort((a,b)=>Number(b.relevanceScore||0)-Number(a.relevanceScore||0)||new Date(b.publishedAt)-new Date(a.publishedAt))
+    .slice(0,5);
+  if(!data.length){div.innerHTML=`<div class="empty">핵심 뉴스가 없습니다.</div>`;return;}
+  data.forEach((n,i)=>{
+    const card=document.createElement("div");
+    card.className="top-news-card";
+    card.innerHTML=`<div class="top-news-rank">${i+1}</div>
+    <div><a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a></div>
+    <div class="top-news-meta">${n.source} · ${n.keyword} · 관련성 ${n.relevanceScore}</div>`;
+    div.appendChild(card);
+  });
+}
+function renderSourceButtons(){
+  const div=document.getElementById("sourceButtons");
+  div.innerHTML="";
+  FIXED_SOURCES.forEach(source=>{
+    const count=source==="전체"?getBaseBatchNews().length:getBaseBatchNews().filter(n=>n.source===source).length;
+    const btn=document.createElement("button");
+    btn.className="filter-btn";
+    btn.innerText=`${source}(${count})`;
+    if(source===currentSource) btn.classList.add("active");
+    if(source!=="전체"&&count===0) btn.classList.add("dim");
+    btn.onclick=()=>{currentSource=source;renderAll();};
+    div.appendChild(btn);
+  });
+}
+function renderKeywordButtons(){
+  const div=document.getElementById("keywordButtons");
+  div.innerHTML="";
+  const counts=getKeywordCounts();
+  FIXED_KEYWORDS.forEach(keyword=>{
+    const count=keyword==="전체"
+      ? getBaseBatchNews().filter(n=>currentSource==="전체"||n.source===currentSource).filter(n=>Number(n.relevanceScore||0)>=currentScore).length
+      : counts[keyword]||0;
+    const btn=document.createElement("button");
+    btn.className="filter-btn";
+    btn.innerText=`${keyword}(${count})`;
+    if(keyword===currentKeyword) btn.classList.add("active");
+    if(keyword!=="전체"&&count===0) btn.classList.add("dim");
+    btn.onclick=()=>{currentKeyword=keyword;renderAll();};
+    div.appendChild(btn);
+  });
+}
+function renderScoreButtons(){
+  const div=document.getElementById("scoreButtons");
+  div.innerHTML="";
+  [0,60,70,80,90].forEach(score=>{
+    const btn=document.createElement("button");
+    btn.className="filter-btn";
+    btn.innerText=`${score}점 이상`;
+    if(score===currentScore) btn.classList.add("active");
+    btn.onclick=()=>{currentScore=score;renderAll();};
+    div.appendChild(btn);
+  });
+}
+function renderNews(){
+  const body=document.getElementById("newsBody");
+  body.innerHTML="";
+  const list=getFiltered().slice(0,30);
+  if(!list.length){body.innerHTML=`<div class="empty">데이터가 없습니다.</div>`;return;}
+  list.forEach(n=>{
+    const card=document.createElement("div");
+    card.className="news-card";
+    card.innerHTML=`<a class="news-title" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a>
+    <div class="badge-row">
+      <span class="badge">${n.source}</span>
+      <span class="badge">${n.keyword}</span>
+      <span class="badge">관련성 ${n.relevanceScore}</span>
+      <span class="badge">출처정확도 ${n.sourceScore}</span>
+      <span class="badge">${escapeHtml(String(n.publishedAt||""))}</span>
+    </div>
+    <div class="summary">${escapeHtml(n.summary||"")}</div>`;
+    body.appendChild(card);
+  });
+}
+function renderArchive(){
+  const div=document.getElementById("archive");
+  div.innerHTML="";
+  const rows=archiveData.map(a=>({batchDate:normalizeDate(a.batchDate),articleCount:a.articleCount})).filter(a=>a.batchDate);
+  rows.sort((a,b)=>new Date(a.batchDate)-new Date(b.batchDate));
+  rows.slice(-7).reverse().forEach(a=>{
+    const btn=document.createElement("button");
+    btn.className="filter-btn";
+    btn.innerText=`${a.batchDate} (${a.articleCount})`;
+    if(a.batchDate===normalizeDate(currentBatch)) btn.classList.add("active");
+    btn.onclick=()=>{currentBatch=a.batchDate;currentSource="전체";currentKeyword="전체";currentScore=70;renderAll();};
+    div.appendChild(btn);
+  });
+}
+function escapeHtml(str){
+  return String(str||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+}
+loadNews();
 </script>
-
 </body>
 </html>
