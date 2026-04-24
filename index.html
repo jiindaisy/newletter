@@ -110,7 +110,7 @@ async function loadNews(refresh=false){
     const data=await res.json();
     allNews=dedupeNews(data.news||[]);
     archiveData=Array.isArray(data.archive)?data.archive:[];
-    currentBatch=data.latestBatchDate?normalizeDate(data.latestBatchDate):getLatestBatchFromNews();
+    currentBatch = getLatestBatchFromNews() || normalizeDate(data.latestBatchDate);
     renderAll();
   }catch(e){
     alert("데이터 불러오기 실패");
